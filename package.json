@@ -1,0 +1,9 @@
+{
+  "name": "habitica-todo-chrome",
+  "version": "0.0.1",
+  "description": "Chrome omnibox extension to play with habitica todos",
+  "repository": "git@github.com:greatghoul/habitica-todo-chrome.git",
+  "author": "greatghoul <greatghoul@gmail.com>",
+  "license": "MIT",
+  "private": true
+}
