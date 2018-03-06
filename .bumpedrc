@@ -1,0 +1,11 @@
+files:
+  - package.json
+  - extension/manifest.json
+plugins:
+  prerelease:
+    Linting config files:
+      plugin: bumped-finepack
+  postrelease:
+    Publishing tag to GitHub:
+      plugin: bumped-terminal
+      command: 'git tag $newVersion
