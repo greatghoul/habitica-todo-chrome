@@ -1,0 +1,21 @@
+ {
+  "name": "Habitica Omnibox Todos",
+  "description": "Chrome omnibox extension to play with habitica todos (keyword: ht) .",
+  "manifest_version": 2,
+  "version": "0.0.1",
+  "omnibox": {
+    "keyword" : "ht"
+  },
+  "icons": {
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "background": {
+    "persistent": false,
+    "scripts": ["lodash.min.js", "event.js"]
+  },
+  "permissions": [
+    "activeTab",
+    "*://habitica.com/*"
+  ]
+}

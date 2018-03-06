@@ -6,6 +6,12 @@
   "author": "greatghoul <greatghoul@gmail.com>",
   "license": "MIT",
   "private": true,
+  "standard": {
+    "globals": [
+      "chrome",
+      "_"
+    ]
+  },
   "devDependencies": {
     "bumped": "^0.10.9"
   }
