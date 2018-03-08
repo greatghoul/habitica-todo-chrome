@@ -7,6 +7,8 @@ const AUTH_CFG = {
   runAt: 'document_end'
 }
 
+let authoring = false
+
 function notify (title, message) {
   chrome.notifications.create({
     title, message, type: 'basic', iconUrl: 'icon-48.png'
@@ -34,7 +36,7 @@ function authorize () {
           chrome.tabs.remove(tab.id)
           resolve()
         } catch (e) {
-          console.log(e)
+          console.log('Failed to authorize', e)
           reject(e)
           chrome.tabs.update(tab.id, { url: APP_URL, active: true })
         }
@@ -121,7 +123,8 @@ function inputStartedHandler () {
 function inputChangedHandler (text, suggest) {
   if ('API_KEY' in window.localStorage) {
     fetchSuggestions(text, suggest)
-  } else {
+  } else if (!authoring) {
+    authoring = true
     authorize().then(() => fetchSuggestions(text, suggest))
   }
 }
@@ -146,6 +149,11 @@ function inputEnteredHandler (content, x) {
   }
 }
 
+function installedHandler () {
+  notify('WELCOME', 'Type `ht` in address bar then hit <tab> to play with Habitica Omnibox')
+}
+
 chrome.omnibox.onInputStarted.addListener(inputStartedHandler)
 chrome.omnibox.onInputChanged.addListener(inputChangedHandler)
 chrome.omnibox.onInputEntered.addListener(inputEnteredHandler)
+chrome.runtime.onInstalled.addListener(installedHandler)
