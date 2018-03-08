@@ -1,3 +1,4 @@
+const DONE_PREFIX = /^done:\s*/
 const APP_URL = 'https://habitica.com/'
 const API_BASE = 'https://habitica.com/api/v3'
 const AUTH_URL = 'https://habitica.com/favicon.ico'
@@ -62,7 +63,7 @@ function buildDescription (description, keyword) {
   return _.chain(description).escape().replace(highlight, markedHighlight).value()
 }
 
-function filterTodos (text) {
+function filteredTodos (text) {
   return _.chain(loadTodos()).map(todo => {
     if (todo.text.toLowerCase().indexOf(text.toLowerCase()) !== -1) {
       return {
@@ -75,36 +76,76 @@ function filterTodos (text) {
   }).compact().value()
 }
 
-function fetchTodos (text, suggest) {
+function fetchTodos () {
+  return requestApi('/tasks/user?type=todos').then(result => saveTodos(result.data))
+}
+
+function fetchSuggestions (text, suggest) {
   chrome.omnibox.setDefaultSuggestion({ description: '<url>Hint:</url> Submit anything to create a new todo.' })
 
   if (loadTodos().length) {
-    suggest(filterTodos(text))
+    suggest(filteredTodos(text))
   } else {
-    requestApi('/tasks/user?type=todos')
-      .then(result => saveTodos(result.data))
-      .then(() => suggest(filterTodos(text)))
-      .catch(() => suggest([]))
+    fetchTodos().then(() => suggest(filteredTodos(text))).catch(() => suggest([]))
   }
 }
 
 function createTodo (text) {
+  console.log(`Creating new todo: %c${text}`, 'color: blue')
+
   const payload = JSON.stringify({ text, type: 'todo' })
-  requestApi('/tasks/user', { method: 'POST', body: payload })
-    .then(result => result.success && notify('TODO CREATED', text))
+  return requestApi('/tasks/user', { method: 'POST', body: payload })
+           .then(result => result.data)
+}
+
+function completeTodo (todo) {
+  console.log(`Completing todo %c${todo.text}`, 'color: blue')
+  console.log(todo)
+
+  return requestApi(`/tasks/${todo.id}/score/up`, { method: 'POST' })
+           .then(() => notify('TODO COMPLETED', todo.text))
+           .then(() => fetchTodos())
+}
+
+function findTodo (text) {
+  return _.find(loadTodos(), todo => _.trim(todo.text) === text)
+}
+
+// Fetch live todos on start
+function inputStartedHandler () {
+  if ('API_KEY' in window.localStorage) {
+    fetchTodos()
+  }
 }
 
 function inputChangedHandler (text, suggest) {
   if ('API_KEY' in window.localStorage) {
-    fetchTodos(text, suggest)
+    fetchSuggestions(text, suggest)
   } else {
-    authorize().then(() => fetchTodos(text, suggest))
+    authorize().then(() => fetchSuggestions(text, suggest))
   }
 }
 
-function inputEnteredHandler (content) {
-  createTodo(content)
+function inputEnteredHandler (content, x) {
+  let text = _.trim(content)
+
+  if (DONE_PREFIX.test(text)) {
+    // If the input if prefixed by `done:`, find or create the todo by
+    // input text, and then mark it as done.
+    text = text.replace(DONE_PREFIX, '')
+    const todo = findTodo(text)
+    if (todo) {
+      completeTodo(todo)
+    } else {
+      createTodo(text).then(todo => completeTodo(todo))
+    }
+  } else {
+    createTodo(text)
+      .then(() => notify('TODO CREATED', text))
+      .then(() => fetchTodos())
+  }
 }
 
+chrome.omnibox.onInputStarted.addListener(inputStartedHandler)
 chrome.omnibox.onInputChanged.addListener(inputChangedHandler)
 chrome.omnibox.onInputEntered.addListener(inputEnteredHandler)
