@@ -6,6 +6,12 @@ const AUTH_CFG = {
   runAt: 'document_end'
 }
 
+function notify (title, message) {
+  chrome.notifications.create({
+    title, message, type: 'basic', iconUrl: 'icon-48.png'
+  })
+}
+
 function saveTodos (todos) {
   window.localStorage['TODOS'] = JSON.stringify(todos)
 }
@@ -39,6 +45,7 @@ function authorize () {
 function requestApi (endpoint, init) {
   const headers = new window.Headers()
   headers.append('ACCEPT', 'application/json')
+  headers.append('Content-Type', 'application/json;charset=UTF-8')
   headers.append('x-client', 'Habitica Omnibox Todos')
   headers.append('x-api-user', window.localStorage['API_ID'])
   headers.append('x-api-key', window.localStorage['API_KEY'])
@@ -81,6 +88,12 @@ function fetchTodos (text, suggest) {
   }
 }
 
+function createTodo (text) {
+  const payload = JSON.stringify({ text, type: 'todo' })
+  requestApi('/tasks/user', { method: 'POST', body: payload })
+    .then(result => result.success && notify('TODO CREATED', text))
+}
+
 function inputChangedHandler (text, suggest) {
   if ('API_KEY' in window.localStorage) {
     fetchTodos(text, suggest)
@@ -90,7 +103,7 @@ function inputChangedHandler (text, suggest) {
 }
 
 function inputEnteredHandler (content) {
-  console.log(content)
+  createTodo(content)
 }
 
 chrome.omnibox.onInputChanged.addListener(inputChangedHandler)

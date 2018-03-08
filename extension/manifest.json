@@ -16,6 +16,7 @@
   },
   "permissions": [
     "activeTab",
+    "notifications",
     "*://habitica.com/*"
   ]
 }
