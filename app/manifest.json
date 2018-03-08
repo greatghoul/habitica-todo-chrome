@@ -2,7 +2,7 @@
   "name": "Habitica Omnibox Todos",
   "description": "Chrome omnibox extension to play with habitica todos (keyword: ht) .",
   "manifest_version": 2,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "omnibox": {
     "keyword" : "ht"
   },

@@ -1,6 +1,6 @@
 {
   "name": "habitica-todo-chrome",
-  "version": "0.0.2",
+  "version": "0.0.0",
   "description": "Chrome omnibox extension to play with habitica todos",
   "repository": "git@github.com:greatghoul/habitica-todo-chrome.git",
   "author": "greatghoul <greatghoul@gmail.com>",
@@ -13,6 +13,11 @@
     ]
   },
   "devDependencies": {
-    "bumped": "^0.10.9"
+    "gulp": "^3.9.1",
+    "gulp-bump": "^3.1.0",
+    "gulp-filter": "^5.1.0",
+    "gulp-git": "^2.5.2",
+    "gulp-tag-version": "^1.3.1",
+    "require-dir": "^1.0.0"
   }
 }
