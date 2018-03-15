@@ -131,7 +131,7 @@ function findOrCreateTodo(text) {
   const todo = findTodo(text)
   if (todo) {
     return new Promise((resolve, reject) => {
-      resolve(todo, true)
+      resolve(todo)
     })
   } else {
     return createTodo(text)
@@ -144,8 +144,8 @@ function inputEnteredHandler (content, x) {
   if (TODO_PREFIX.test(text)) {
     text = text.replace(TODO_PREFIX, '')
 
-    findOrCreateTodo(text)
-      .then((todo, fresh) => fresh && notify('TODO CREATED', text))
+    createTodo(text)
+      .then(() => notify('TODO CREATED', text))
       .then(() => fetchTodos())
   } else {
     findOrCreateTodo(text)
