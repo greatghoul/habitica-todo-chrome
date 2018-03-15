@@ -1,4 +1,4 @@
-const DONE_PREFIX = /^done:\s*/
+const TODO_PREFIX = /^todo:\s*/
 const APP_URL = 'https://habitica.com/'
 const API_BASE = 'https://habitica.com/api/v3'
 const AUTH_URL = 'https://habitica.com/favicon.ico'
@@ -69,8 +69,8 @@ function filteredTodos (text) {
   return _.chain(loadTodos()).map(todo => {
     if (todo.text.toLowerCase().indexOf(text.toLowerCase()) !== -1) {
       return {
-        content: `done: ${todo.text}`,
-        description: `<match>done:</match> ${buildDescription(todo.text, text)}`
+        content: todo.text,
+        description: buildDescription(todo.text, text)
       }
     } else {
       return null
@@ -83,7 +83,7 @@ function fetchTodos () {
 }
 
 function fetchSuggestions (text, suggest) {
-  chrome.omnibox.setDefaultSuggestion({ description: '<url>Hint:</url> Submit anything to create a new todo.' })
+  chrome.omnibox.setDefaultSuggestion({ description: '<url>Hint:</url> Submit anything to complete a todo. (prefix with `todo:` will keep it not completed.' })
 
   if (loadTodos().length) {
     suggest(filteredTodos(text))
@@ -105,8 +105,6 @@ function completeTodo (todo) {
   console.log(todo)
 
   return requestApi(`/tasks/${todo.id}/score/up`, { method: 'POST' })
-           .then(() => notify('TODO COMPLETED', todo.text))
-           .then(() => fetchTodos())
 }
 
 function findTodo (text) {
@@ -129,22 +127,30 @@ function inputChangedHandler (text, suggest) {
   }
 }
 
+function findOrCreateTodo(text) {
+  const todo = findTodo(text)
+  if (todo) {
+    return new Promise((resolve, reject) => {
+      resolve(todo, true)
+    })
+  } else {
+    return createTodo(text)
+  }
+}
+
 function inputEnteredHandler (content, x) {
   let text = _.trim(content)
 
-  if (DONE_PREFIX.test(text)) {
-    // If the input if prefixed by `done:`, find or create the todo by
-    // input text, and then mark it as done.
-    text = text.replace(DONE_PREFIX, '')
-    const todo = findTodo(text)
-    if (todo) {
-      completeTodo(todo)
-    } else {
-      createTodo(text).then(todo => completeTodo(todo))
-    }
+  if (TODO_PREFIX.test(text)) {
+    text = text.replace(TODO_PREFIX, '')
+
+    findOrCreateTodo(text)
+      .then((todo, fresh) => fresh && notify('TODO CREATED', text))
+      .then(() => fetchTodos())
   } else {
-    createTodo(text)
-      .then(() => notify('TODO CREATED', text))
+    findOrCreateTodo(text)
+      .then(todo => completeTodo(todo))
+      .then(() => notify('TODO COMPLETED', text))
       .then(() => fetchTodos())
   }
 }
